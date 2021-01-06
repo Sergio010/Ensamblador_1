@@ -1,0 +1,249 @@
+
+; You may customize this and other start-up templates; 
+; The location of this template is c:\emu8086\inc\0_com_template.txt
+
+
+org 100h
+
+ ; PROGRAMA PARA EL CALCULO DEL IMC EN ENSAMBLADOR 8086
+
+.DATA ; mensajes de bienvenida 
+
+    mensaje0 db "Bienvenido.",10,13, "$"
+    mensaje1 db "Ingresa los siguientes datos:",10,13, "$"  
+    
+    ; mensajes estadisticos
+    mensaje2 db 10,13,"Su imc es: $"  
+    mensaje3 db "Desnutricion severa. $"
+    mensaje4 db "Desnutricion moderada. $"
+    mensaje5 db "Bajo peso. $"
+    mensaje6 db "Peso normal. $"
+    mensaje7 db "Sobrepeso. $"
+    mensaje8 db "Obesidad tipo 1. $" 
+    mensaje9 db "Obesidad tipo 2. $"
+    mensaje12 db "Obesidad tipo 3. $"
+    mensaje13 db 10,13,"Categoria: $"  
+    
+   ; ingreso de informacion
+    
+    mensaje10 db 10,13,"Ingrese peso: $"
+    mensaje11 db 10,13,"Ingrese altura (en cm): $"  
+    
+    ; datos para IMC
+    
+    u db 0;unidad
+    d db 0;decena
+    c db 0;centena
+    peso db ?;numero en si  
+    altura db ?   ; en m                                 
+    ajuste dw 10000   ; ?                                                          
+    imc db ?
+    
+                       
+.CODE      
+
+    mov ax, @data
+    mov ds, ax 
+
+  ; se imprime mensaje de bienvenida e ingreso de datos                              
+    lea dx, mensaje0
+    mov ah, 9h            
+    int 21h   
+       
+    
+    lea dx, mensaje1
+    mov ah, 9h            
+    int 21h 
+    
+   ; se piden los datos, el peso:    
+    lea dx, mensaje10
+    mov ah, 9h            
+    int 21h  
+   ; Capturamos cada valor del peso, primero la centena, despues la decena y por ultimo la unidad generando asi un numero ABC.
+    
+    mov ah,1h  ;captura de centena
+    int 21h
+    sub al,30h
+    mov c, al 
+    
+    mov ah,1h   ;captura decena
+    int 21h
+    sub al,30h
+    mov d, al    
+    
+    mov ah,1h   ; captura de unidad
+    int 21h
+    sub al,30h
+    mov u, al  
+    
+    ;transformacion a numero completo
+    ;y se asigna a peso
+                             
+    ;;;
+    mov al, c
+    mov bl, 100 
+    mul bl
+    mov dl, al 
+    mov al, d
+    mov bl, 10 
+    mul bl
+    add dl,al
+    add dl, u
+    mov peso, dl 
+    
+    ; para la altura:  
+  
+    lea dx, mensaje11
+    mov ah, 9h
+    int 21h  
+    
+    mov ah,1h  ;captura de centena
+    int 21h
+    sub al,30h
+    mov c, al 
+    
+    mov ah,1h  ;captura decena
+    int 21h
+    sub al,30h
+    mov d, al
+    
+    mov ah,1h   ; captura de unidad
+    int 21h
+    sub al,30h
+    mov u, al
+    
+    ;transformacion a numero completo
+    ;y se asigna la estatura a altura
+    
+    mov al, c
+    mov bl, 100 
+    mul bl
+    mov dl, al 
+    mov al, d
+    mov bl, 10 
+    mul bl
+    add dl,al
+    add dl, u
+    mov altura, dl 
+    
+    ;;;
+                                               
+    mov al, altura
+    cbw           
+    mul al
+    mov cx,ax  
+    
+    mov al, peso
+    cbw
+    mul ajuste
+    div cx        
+                                               
+                                               
+    mov imc, al                                
+    
+    
+    mov dx, offset mensaje2
+    mov ah, 9h
+    int 21h 
+    
+    ;Operacion inversa para transforma numero a ASCII      
+                              
+    mov al,imc
+    AAM ;instruccion para desempaquetado                        
+    mov bx, ax
+    mov ah, 2h
+    mov dl, bh
+    add dl, 30h
+     
+    add dl, 48
+    add dl, 60O
+    add dl, 00110000b
+    
+    
+    int 21h
+    
+    mov ah, 2h
+    mov dl, bl
+    add dl, 30h
+    int 21h
+        
+    mov dx, offset mensaje13
+    mov ah, 9h
+    int 21h   
+    
+                           
+    cmp imc, 16
+    jl E1
+    cmp imc, 19
+    jl E2
+    cmp imc, 22
+    jl E3            
+    cmp imc, 25
+    jl E4
+    cmp imc, 30
+    jl E5              
+    cmp imc, 35               
+    jl E6
+    cmp imc, 40
+    jl E7      
+             
+    
+    ;print "Obesidad tipo3
+    mov dx, offset mensaje12
+    mov ah, 9h
+    int 21h
+    jl Fin
+              
+              
+               
+              
+    ;print "Desnutrición severa"
+E1:
+    mov dx, offset mensaje3
+    mov ah, 9h
+    int 21h
+    jl Fin
+E2:
+    ;print "Desnutrición moderada"
+    mov dx, offset mensaje4
+    mov ah, 9h
+    int 21h
+    jl Fin
+E3:
+    ;print "Bajo peso"
+    mov dx, offset mensaje5
+    mov ah, 9h
+    int 21h
+    jl Fin
+E4:
+    ;print "Peso normal"
+    mov dx, offset mensaje6
+    mov ah, 9h
+    int 21h           
+    jl Fin
+E5:
+    ;print "Sobrepeso"
+    mov dx, offset mensaje7
+    mov ah, 9h
+    int 21h           
+    jl Fin
+
+E6:    
+    ;print "Obesidad tipo 1"
+    mov dx, offset mensaje8
+    mov ah, 9h
+    int 21h
+    jl Fin
+   
+E7:   
+    ;print "Obesidad tipo 2"
+    mov dx, offset mensaje9
+    mov ah, 9h
+    int 21h      
+
+Fin:
+
+
+ret
+
+
